@@ -8,7 +8,7 @@ CA_KEY=$SCRIPT_DIR/certs/ca.key
 OUTPUT_DIR=$SCRIPT_DIR/generated
 CERT_OUTPUT_DIR=$OUTPUT_DIR/certs
 CONFIG_OUTPUT_DIR=$OUTPUT_DIR/configs
-NGINX_ROOT=${NGINX_ROOT:-$SCRIPT_DIR}
+NGINX_ROOT=${NGINX_ROOT:-/app}
 
 # secp384r1 is an elliptic-curve parameter supported by OpenSSL.
 EC_CURVE=secp384r1
@@ -120,7 +120,10 @@ server {
     location / {
         proxy_pass $upstream_url/$domain\$request_uri;
         proxy_http_version 1.1;
-        proxy_set_header Host \$host;
+        proxy_ssl_server_name on;
+        proxy_ssl_name \$proxy_host;
+        proxy_ssl_verify off;
+        proxy_set_header Host \$proxy_host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto http;
@@ -139,7 +142,10 @@ server {
     location / {
         proxy_pass $upstream_url/$domain\$request_uri;
         proxy_http_version 1.1;
-        proxy_set_header Host \$host;
+        proxy_ssl_server_name on;
+        proxy_ssl_name \$proxy_host;
+        proxy_ssl_verify off;
+        proxy_set_header Host \$proxy_host;
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;

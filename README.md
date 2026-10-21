@@ -91,7 +91,7 @@ Run it with ports 80 and 443 published:
 docker run --rm -p 80:80 -p 443:443 v3rt3p-https-proxy
 ```
 
-The final image generates certificates and configs when the container starts, so `*_UPSTREAM_URL` variables can be supplied at runtime:
+The final image generates certificates and configs when the container starts, so `*_UPSTREAM_URL` variables can be supplied at runtime. The official Nginx entrypoint also discovers container DNS nameservers from `/etc/resolv.conf` using `NGINX_ENTRYPOINT_LOCAL_RESOLVERS=true` and injects them into the Nginx configuration:
 
 ```sh
 docker run --rm \
