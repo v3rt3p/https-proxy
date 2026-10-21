@@ -1,4 +1,4 @@
-quasar:3000
+quasar:31120
 clck.yandex.net
 clck.yasmina.yango.com
 login.yandex.ru
