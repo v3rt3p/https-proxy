@@ -43,17 +43,34 @@ for domains_file in "$DOMAINS_DIR"/*.txt; do
     mkdir -p "$list_cert_dir"
     : >"$list_config_file"
 
-    # The first line selects the HTTP host to which this list is proxied.
+    # An environment override takes precedence over the first line.
+    env_name=$(printf '%s' "$list_name" | tr '[:lower:]-.' '[:upper:]__')_UPSTREAM_URL
+    eval "override_url=\${$env_name-}"
+
     exec 3< "$domains_file"
     IFS= read -r upstream <&3 || upstream=''
     upstream=${upstream%$(printf '\r')}
-    case "$upstream" in
-        ''|'#'*|*[!A-Za-z0-9._-]*)
-            printf 'Skipping %s: first line must be an upstream hostname\n' "$domains_file" >&2
-            exec 3<&-
-            continue
-            ;;
-    esac
+
+    if [ -n "$override_url" ]; then
+        case "$override_url" in
+            http://*|https://*) ;;
+            *)
+                printf 'Skipping %s: %s must start with http:// or https://\n' "$domains_file" "$env_name" >&2
+                exec 3<&-
+                continue
+                ;;
+        esac
+        upstream_url=${override_url%/}
+    else
+        case "$upstream" in
+            ''|'#'*|*[!A-Za-z0-9._-]*)
+                printf 'Skipping %s: first line must be an upstream hostname\n' "$domains_file" >&2
+                exec 3<&-
+                continue
+                ;;
+        esac
+        upstream_url=http://$upstream
+    fi
 
     while IFS= read -r domain <&3 || [ -n "$domain" ]; do
         # Strip a possible CR from files edited on Windows.
@@ -101,7 +118,7 @@ server {
     server_name $domain;
 
     location / {
-        proxy_pass http://$upstream/$domain\$request_uri;
+        proxy_pass $upstream_url/$domain\$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -120,7 +137,7 @@ server {
     ssl_certificate_key $NGINX_ROOT/generated/certs/$list_name/$domain.key;
 
     location / {
-        proxy_pass http://$upstream/$domain\$request_uri;
+        proxy_pass $upstream_url/$domain\$request_uri;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

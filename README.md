@@ -51,6 +51,14 @@ http://upstream.example/service.example$request_uri
 
 For example, `domains/yandex.txt` starts with `yandex.ru`, so each listed domain is proxied through `yandex.ru`.
 
+An upstream can be overridden with an environment variable based on the list filename. For `domains/yandex.txt`, set `YANDEX_UPSTREAM_URL`:
+
+```sh
+YANDEX_UPSTREAM_URL=https://proxy.example ./generate.sh
+```
+
+The override must use an `http://` or `https://` URL and takes precedence over the first line of the list. List names containing `-` or `.` use underscores in the variable name.
+
 ## Generate Locally
 
 The generator requires OpenSSL and creates P-384 elliptic-curve keys and certificate chains:
@@ -83,4 +91,13 @@ Run it with ports 80 and 443 published:
 docker run --rm -p 80:80 -p 443:443 v3rt3p-https-proxy
 ```
 
-The build stage runs `generate.sh`. The final image contains Nginx and the generated runtime files, but does not contain OpenSSL, the source domain lists, the generator script, or the CA private key.
+The final image generates certificates and configs when the container starts, so `*_UPSTREAM_URL` variables can be supplied at runtime:
+
+```sh
+docker run --rm \
+  -e YANDEX_UPSTREAM_URL=https://proxy.example \
+  -p 80:80 -p 443:443 \
+  v3rt3p-https-proxy
+```
+
+The final image contains Nginx, OpenSSL, the source domain lists, the generator script, the CA certificate, and the CA private key so it can generate runtime certificates and configs. The generated output is created under `/app/generated` when the container starts.
