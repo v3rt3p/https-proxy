@@ -63,8 +63,8 @@ for domains_file in "$DOMAINS_DIR"/*.txt; do
         upstream_url=${override_url%/}
     else
         case "$upstream" in
-            ''|'#'*|*[!A-Za-z0-9._-]*)
-                printf 'Skipping %s: first line must be an upstream hostname\n' "$domains_file" >&2
+            ''|'#'*|*[!A-Za-z0-9._:-]*|:*|*:)
+                printf 'Skipping %s: first line must be an upstream hostname or hostname:port\n' "$domains_file" >&2
                 exec 3<&-
                 continue
                 ;;
