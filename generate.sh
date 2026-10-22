@@ -79,18 +79,39 @@ for domains_file in "$DOMAINS_DIR"/*.txt; do
             ''|'#'*) continue ;;
         esac
 
+        proxy_as_is=false
+        case "$domain" in
+            !*)
+                proxy_as_is=true
+                domain=${domain#?}
+                ;;
+        esac
+
         # Keep output names, certificate subjects, and Nginx values safe.
         case "$domain" in
-            *[!A-Za-z0-9._-]*)
+            ''|*[!A-Za-z0-9._*-]*)
                 printf 'Skipping invalid domain name: %s\n' "$domain" >&2
                 continue
                 ;;
         esac
 
-        key_file=$list_cert_dir/$domain.key
-        csr_file=$list_cert_dir/$domain.csr
-        cert_file=$list_cert_dir/$domain.crt
-        chain_file=$list_cert_dir/$domain.chain.crt
+        key_domain=$domain
+        key_domain=$(printf '%s' "$key_domain" | tr '*' '_')
+        key_file=$list_cert_dir/$key_domain.key
+        csr_file=$list_cert_dir/$key_domain.csr
+        cert_file=$list_cert_dir/$key_domain.crt
+        chain_file=$list_cert_dir/$key_domain.chain.crt
+
+        if [ "$proxy_as_is" = true ]; then
+            proxy_pass_line='proxy_pass https://$host$request_uri;'
+            proxy_ssl_name_line='proxy_ssl_name $host;'
+            proxy_host_line='proxy_set_header Host $host;'
+        else
+            proxy_pass_line="proxy_pass $upstream_url/$domain\$request_uri;"
+            proxy_ssl_name_line='proxy_ssl_name $proxy_host;'
+            proxy_host_line='proxy_set_header Host $proxy_host;'
+        fi
+
         ext_file=$(mktemp "${TMPDIR:-/tmp}/generate-cert.XXXXXX")
         trap 'rm -f "$ext_file"' 0 HUP INT TERM
 
@@ -118,12 +139,12 @@ server {
     server_name $domain;
 
     location / {
-        proxy_pass $upstream_url/$domain\$request_uri;
+        $proxy_pass_line
         proxy_http_version 1.1;
         proxy_ssl_server_name on;
-        proxy_ssl_name \$proxy_host;
+        $proxy_ssl_name_line
         proxy_ssl_verify off;
-        proxy_set_header Host \$proxy_host;
+        $proxy_host_line
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto http;
@@ -136,16 +157,16 @@ server {
     listen 443 ssl;
     server_name $domain;
 
-    ssl_certificate $NGINX_ROOT/generated/certs/$list_name/$domain.chain.crt;
-    ssl_certificate_key $NGINX_ROOT/generated/certs/$list_name/$domain.key;
+    ssl_certificate $NGINX_ROOT/generated/certs/$list_name/$key_domain.chain.crt;
+    ssl_certificate_key $NGINX_ROOT/generated/certs/$list_name/$key_domain.key;
 
     location / {
-        proxy_pass $upstream_url/$domain\$request_uri;
+        $proxy_pass_line
         proxy_http_version 1.1;
         proxy_ssl_server_name on;
-        proxy_ssl_name \$proxy_host;
+        $proxy_ssl_name_line
         proxy_ssl_verify off;
-        proxy_set_header Host \$proxy_host;
+        $proxy_host_line
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;

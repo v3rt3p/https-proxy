@@ -24,3 +24,5 @@ startup.mobile.yandex.net
 uniproxy-quic.alice.yandex.net
 uniproxy.alice.yandex.net
 ws.api.music.yandex.net
+!*.s3.yandex.net
+!*.svc.cdn.yandex.net

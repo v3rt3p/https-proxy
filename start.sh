@@ -10,6 +10,7 @@ fi
 envsubst '${NGINX_LOCAL_RESOLVERS}' \
     < /etc/nginx/templates/nginx.conf.template \
     > /etc/nginx/nginx.conf
+rm -f /etc/nginx/conf.d/nginx.conf
 
 /app/generate.sh
 exec nginx -g 'daemon off;'

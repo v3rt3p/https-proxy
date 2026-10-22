@@ -15,5 +15,6 @@ EXPOSE 80 443
 
 # Generate at startup so *_UPSTREAM_URL variables can be supplied at runtime.
 ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=true
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx
 
 CMD ["/app/start.sh"]

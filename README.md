@@ -43,6 +43,8 @@ another-service.example
 
 - The first line is the upstream hostname.
 - Every following non-empty, non-comment line is a domain to proxy.
+- Wildcard domains such as `*.example.com` are supported.
+- Prefix a domain with `!` to proxy it directly to the original host instead of the list upstream. For example, `!*.s3.yandex.net` proxies each matching host to itself.
 - For a domain named `service.example`, requests are forwarded to:
 
 ```text
