@@ -1,6 +1,6 @@
 # https-proxy
 
-This repository contains an HTTPS reverse-proxy server for use with **v3rt3p** software that relies on the eMudhra intermediate CA with broken keys.
+This repository contains an HTTPS reverse proxy server for use with **v3rt3p** software that relies on the eMudhra intermediate CA with broken keys.
 
 The proxy generates elliptic-curve certificates for configured domains, serves HTTP and HTTPS endpoints with Nginx, and forwards requests to the upstream host specified by each domain list.
 
@@ -103,3 +103,7 @@ docker run --rm \
 ```
 
 The final image contains Nginx, OpenSSL, the source domain lists, the generator script, the CA certificate, and the CA private key so it can generate runtime certificates and configs. The generated output is created under `/app/generated` when the container starts.
+
+## Security
+
+Replace the development CA before production. Never publish `ca.key` or generated private keys. Restrict access to ports 80 and 443 and review every domain list before deployment.
