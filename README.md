@@ -4,6 +4,8 @@ HTTPS reverse-proxy server for use with **v3rt3p** software that relies on the e
 
 The proxy generates elliptic-curve certificates for configured domains, serves HTTP and HTTPS endpoints with Nginx, and forwards requests to the upstream host specified by each domain list and passes unchanged anything else.
 
+Docs ([en](https://v3rt3p.github.io/en/services/https-proxy.html)/[ru](https://v3rt3p.github.io/ru/services/https-proxy.html))
+
 ## Layout
 
 ```text
